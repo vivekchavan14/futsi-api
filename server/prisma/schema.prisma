@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  uuid             String    @id @default(uuid())
+  username         String
+  email            String    @unique
+  password         String
+  role             Role      @default(STUDENT)
+  enrolledCourses  Course[]  @relation("EnrolledCourses")
+  createdCourses   Course[]  @relation("CreatedCourses")
+  payments         Payment[]
+}
+
+model Course {
+  courseId         String     @id @default(uuid())
+  imgLink          String
+  title            String
+  subtitle         String
+  description      String
+  category         String
+  courseLevel      CourseLevel
+  price            Float
+  isFeatured       Boolean    @default(false)
+
+  enrolledStudents User[]     @relation("EnrolledCourses")
+  lectures         Lecture[]
+  creatorId        String
+  creator          User       @relation("CreatedCourses", fields: [creatorId], references: [uuid])
+
+  payments         Payment[]
+}
+
+model Lecture {
+  lectureID         String   @id @default(uuid())
+  lectureTitle      String
+  lectureDescription String
+  videoURL          String
+  courseId          String
+  course            Course   @relation(fields: [courseId], references: [courseId])
+}
+
+model Payment {
+  id         String   @id @default(uuid())
+  courseId   String
+  userId     String
+  amount     Float
+  status     PaymentStatus
+  paymentId  String    @unique
+
+  user       User     @relation(fields: [userId], references: [uuid])
+  course     Course   @relation(fields: [courseId], references: [courseId])
+}
+
+enum Role {
+  INSTRUCTOR
+  STUDENT
+}
+
+enum CourseLevel {
+  BEGINNER
+  MEDIUM
+  ADVANCE
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
